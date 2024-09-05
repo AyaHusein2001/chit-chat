@@ -1,0 +1,18 @@
+what we did for routing in frontend:
+-created routes folder included index.js , this will contail all the routes
+- inside original index.js of the src , we wrapped the app with our router provider
+- in app js , we put outlet
+
+--------------
+Backend
+-------
+-- .env -> contains ur env vars including mongodb uri, jwt secret key , frontend url .
+-- cors package: Controlled Access: With CORS, a server can decide which websites are allowed to use its resources.
+-- config contains connection to db
+-- controller folder contains all functions will be done through backend 
+-- functions in the controller will then be used in the routes/ index.js , to pass the specific function to its specific route
+-- helpers contain utility functions , so that code is not complex
+-- models contain different models (db schema --> entities with attrs) created with mongoose after creating a project on mongodb website , taking the secret key from it .
+-- main index.js just consumes all of this -- uses router , so on 
+-- cookie parser , cookie-parser is a middleware for Node.js that parses cookies attached to the client request object. It helps you read and manipulate cookies in a more convenient way when building a web application using Express.js.
+, we used it , we used post man too to ensure that every request is working well .
