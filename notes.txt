@@ -1,7 +1,143 @@
 what we did for routing in frontend:
--created routes folder included index.js , this will contail all the routes
-- inside original index.js of the src , we wrapped the app with our router provider
-- in app js , we put outlet
+--created routes folder included index.js , this will contail all the routes
+-- inside original index.js of the src , we wrapped the app with our router provider
+-- in app js , we put outlet
+
+-- to upload photos to internet :
+- we used cloudinary , searched for cloudinary upload image , took this api url https://api.cloudinary.com/v1_1/demo/image/upload copy
+- changed it like this , here is the uploadFile.js we created in the helpers :
+
+const url = `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/auto/upload`
+const uploadFile=async(file)=>{
+    const formData = new FormData()
+    formData.append('file',file)
+    formData.append("upload_preset","chat-app-file")
+    const response = await fetch(url,{
+        method:"post",
+        body: formData
+    })
+    const responseData = await response.json()
+    return responseData
+}
+
+export default uploadFile
+- note that chat-app-file is the same name used in the cloudinary steps .
+- in the .env , we add 
+REACT_APP_CLOUDINARY_CLOUD_NAME = dwhbtsfe1
+
+// dwhbtsfe1 this is the name came from cloudinary dashboard
+
+- in the register page we used the uploadFile function :
+    const uploadPhoto = await uploadFile(file)
+
+and that is it .
+
+
+-- for the notification :
+- we installed hot toast for react , copied its import in app js
+- added the toaster in it also :
+function App() {
+  return (
+    <>
+    <Toaster />
+    <main>
+      {/* render the component u want , outlet from react router */}
+      <Outlet />
+    </main>
+    </>
+  );
+}
+
+- we wanted to use it in the register page , so import it there 
+- whenever success :
+      toast.success(response?.data?.message)
+- whenever error :
+      toast.error(error?.response?.data?.message)
+
+
+-- authlayout is just the header , after it we display its children , I mean any page , register , login , so on .
+-- to add a new page just create its js , rafce , add it to the routs 
+
+--Redux :
+- to use redux , we firstly installed it 
+- then created redux folder , inside it a store js file , copied its firstly implementation from documentation / tutorials / quick start
+- then created userslice js file , implemented initial state , all possible reducers like this :
+import { createSlice } from '@reduxjs/toolkit'
+
+export const userSlice = createSlice({
+  name: 'user',
+  initialState: {
+    _id:'',
+    name:'',
+    email:'',
+    profile_pic:'',
+    token:''
+  },
+  reducers: {
+   setUser:(state,action)=>{
+    state._id=action.payload._id
+    state.name=action.payload.name
+    state.email=action.payload.email
+    state.profile_pic=action.payload.profile_pic
+   } ,
+   setToken:(state,action)=>{
+    state.token=action.payload.token
+
+   },
+   logout:(state,action)=>{
+    state._id=''
+    state.name=''
+    state.email=''
+    state.profile_pic=''
+    state.token=''
+
+   } ,
+  }
+})
+
+// Action creators are generated for each case reducer function
+export const { setUser,setToken,logout } = userSlice.actions
+
+export default userSlice.reducer
+
+- then imported the userslice as a userReducer , used it in the store js file like this :
+//copied from the documentation at first
+import { configureStore } from '@reduxjs/toolkit'
+import userReducer from './userSlice'
+
+export default configureStore({
+  reducer: {
+    user:userReducer
+  }
+})
+
+- in the index js , we wraaped our app with the provider imported from react-redux package :
+import {Provider} from 'react-redux' 
+import store from './redux/store';
+
+    <Provider store={store}>
+
+    <RouterProvider router={router} >
+    <App />
+    </RouterProvider>
+
+    </Provider>
+
+- suppose we want to use a reducer , for example , when the user logs in , we will just use useDispatch , call the reducer , we want , send the data we want to it too like this :
+  const dispatch= useDispatch()// this is for redux
+        // this is when user logs in successfully
+        dispatch(setUser(response?.data?.data))
+
+- whenever u wanna access the state , we read it like this :
+  const user = useSelector(state=>state.user)
+
+
+
+--handling login logic:
+- when the user enters email , we verify it from back , then navigate to password page , when he enters it this time , 
+we will send a request to the backend too to make sure it is right , but with settimg withcredintials to true in the request .
+- in the user state , we have a token attribute too , when we get the response from backend ,
+which must hold the token , we store this token in the front using the settoken dispatch 
 
 --------------
 Backend
@@ -16,3 +152,50 @@ Backend
 -- main index.js just consumes all of this -- uses router , so on 
 -- cookie parser , cookie-parser is a middleware for Node.js that parses cookies attached to the client request object. It helps you read and manipulate cookies in a more convenient way when building a web application using Express.js.
 , we used it , we used post man too to ensure that every request is working well .
+
+
+-- to register a user , we store a hashed password , whenever we wanna check it we use compare :
+    //password into hash password 
+    const salt = await bcryptjs.genSalt(10)
+    const hashpassword = await bcryptjs.hash(password,salt)
+
+    const payload={
+        name,
+        email,
+        profile_pic,
+       password: hashpassword
+    }
+
+-- to check password :
+1- const verifiedPassword = await bcryptjs.compare(password,user.password) // compare it with the one in the db
+2- if no match return not verified
+3- else generate a token for the signed in user , to use it for security 
+
+//JWT for security
+    const tokenData = {
+        id: user._id,
+        email: user.email
+    }
+
+    const token = await jwt.sign(tokenData,process.env.JWT_SECRET_KEY,{expiresIn:'1d'})
+
+    const cookieOptions = {
+        http:true,
+        secure:true
+    }
+
+    return response.cookie('token',token,cookieOptions).status(200).json({
+        message: "Logged in successfully",
+        data: token,
+        success : true
+      });
+
+
+-- from this token , we can then get user id  by decoding it , get the rest of his info using this id from data base :
+    const decode = await jwt.verify(token,process.env.JWT_SECRET_KEY)
+
+    const user = await UserModel.findById(decode.id).select("-password")
+    
+
+------------------------
+
