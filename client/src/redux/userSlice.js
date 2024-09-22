@@ -17,7 +17,7 @@ export const userSlice = createSlice({
     state.profile_pic=action.payload.profile_pic
    } ,
    setToken:(state,action)=>{
-    state.token=action.payload.token
+    state.token=action.payload
 
    },
    logout:(state,action)=>{

@@ -137,7 +137,12 @@ import store from './redux/store';
 - when the user enters email , we verify it from back , then navigate to password page , when he enters it this time , 
 we will send a request to the backend too to make sure it is right , but with settimg withcredintials to true in the request .
 - in the user state , we have a token attribute too , when we get the response from backend ,
-which must hold the token , we store this token in the front using the settoken dispatch 
+which must hold the token , we store this token in the front using the settoken dispatch , but we must ensure that whenever token is not available,
+this will mean user is either logged out or not registered , so he must be redirected to the email page
+
+
+
+
 
 --------------
 Backend

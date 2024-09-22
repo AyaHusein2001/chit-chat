@@ -13,6 +13,8 @@ const CheckPasswordPage = () => {
     password: "",
     userId: "",
   });
+  const user = useSelector(state=>state.user)
+
   const navigate = useNavigate(); // use it to navigate to another page
   const location = useLocation(); // this is to recieve the state sent from check email page
   const dispatch = useDispatch(); // this is for redux
@@ -54,7 +56,10 @@ const CheckPasswordPage = () => {
 
       // when user is regestered , clear the state :
       if (response?.data?.success) {
-        dispatch(setToken(response?.data?.data)); // when console loged response , we saw that token is there
+        
+        dispatch(setToken(response?.data?.token)); // when console loged response , we saw that token is there
+        console.log(response?.data?.token)
+        console.log('redux-userhere',user)
 
 
         console.log("responsjjje", response);
