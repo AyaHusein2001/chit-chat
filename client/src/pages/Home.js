@@ -1,13 +1,15 @@
 import axios from "axios";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { setUser, logout } from "../redux/userSlice";
 import Sidebar from "../components/Sidebar";
+import logo from '../assets/logo.png'
 const Home = () => {
   //access the user from the state using useSelector
   const user = useSelector((state) => state?.user);
   console.log("redux-user", user);
+  const location = useLocation()
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const fetchUserDetails = async () => {
@@ -21,7 +23,7 @@ const Home = () => {
       });
       dispatch(setUser(response?.data?.data));
       // if logout is set to true , which comes in the userdetails when there is no token , I want to set all data to '' , so I dispatch logut
-      if (response?.data?.logout) {
+      if (response?.data?.data?.logout) {
         dispatch(logout());
         navigate("/email");
       }
@@ -34,7 +36,9 @@ const Home = () => {
   useEffect(() => {
     fetchUserDetails(); //once mounted , fetch user details
   }, []);
-
+  
+  //if we are at the '/' , I do not want the bottom part to show
+  const basePath= location.pathname==='/'
   return (
     <>
     {
@@ -48,14 +52,27 @@ max-h-screen: Sets the maximum height of an element to be 100% of the viewport h
     */
     }
       <div className="grid grid-cols-[300px,1fr] h-screen max-h-screen">
-        <section className="bg-white">
+        <section className={`bg-white ${!basePath&&"hidden"} lg:block `}>
           <Sidebar />
         </section>
 
         {/* message component */}
-        <section>
+        <section  className={`${basePath&&"hidden"}`}>
           <Outlet />
         </section>
+
+        <div className="lg:flex justify-center items-center flex-col gap-2 hidden ">
+          <div>
+            <img 
+            src={logo}
+            width={230}
+            alt='logo'
+            />
+          </div>
+          <p className="text-lg  text-slate-500 ">
+            Select User to send message
+          </p>
+        </div>
       </div>
     </>
   );
